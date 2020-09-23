@@ -1,0 +1,15 @@
+{
+  "ssh_username": "ubuntu",
+  "ssh_password": "ubuntu",
+  "vcsa_host": "vcsa.internal",
+  "vcsa_username": "administrator@vsphere.local",
+  "vcsa_password": "P@$$w0rd!",
+  "vcsa_datacenter": "datacenter1",
+  "vcsa_cluster": "cluster1",
+  "vcsa_folder": "/templates",
+  "datastore": "datastore1",
+  "disk_size": "25600",
+  "vm_network": "VM Network",
+  "shared_key": "id_rsa.pub",
+  "domain": "internal"
+}

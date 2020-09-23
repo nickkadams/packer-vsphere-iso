@@ -1,0 +1,98 @@
+{
+  "variables": {
+    "vm_name": "ubuntu18",
+    "vm_mac": "00:50:56:96:ac:af"
+  },
+  "min_packer_version": "1.6.0",
+  "builders": [
+    {
+      "type": "vsphere-iso",
+      "iso_urls": [
+        "ubuntu-18.04.5-server-amd64.iso",
+        "http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.5-server-amd64.iso"
+      ],
+      "iso_checksum": "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996",
+      "vcenter_server": "{{user `vcsa_host`}}",
+      "username": "{{user `vcsa_username`}}",
+      "password": "{{user `vcsa_password`}}",
+      "insecure_connection": true,
+      "datacenter": "{{user `vcsa_datacenter`}}",
+      "cluster": "{{user `vcsa_cluster`}}",
+      "folder": "{{user `vcsa_folder`}}",
+      "datastore": "{{user `datastore`}}",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_pty": true,
+      "ssh_timeout": "15m",
+      "http_directory": "http",
+      "convert_to_template": true,
+      "vm_name": "{{user `vm_name`}}-{{isotime \"2006-01-02\"}}",
+      "vm_version": 15,
+      "guest_os_type": "ubuntu64Guest",
+      "boot_order": "disk,cdrom",
+      "firmware": "bios",
+      "CPUs": 1,
+      "RAM": 1024,
+      "RAM_reserve_all": true,
+      "network_adapters": [
+        {
+          "network": "{{user `vm_network`}}",
+          "network_card": "vmxnet3",
+          "mac_address": "{{user `vm_mac`}}"
+        }
+      ],
+      "disk_controller_type": "pvscsi",
+      "storage": [
+        {
+          "disk_size": "{{user `disk_size`}}",
+          "disk_thin_provisioned": true,
+          "disk_controller_index": 0
+        }
+      ],
+      "notes": "From {{user `vm_name`}} on {{isotime \"2006-01-02\"}}",
+      "floppy_files": [
+        "{{template_dir}}/http/{{user `vm_name`}}_preseed.cfg"
+      ],
+      "boot_command": [
+        "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+        "/install/vmlinuz noapic ",
+        "file=/media/{{user `vm_name`}}_preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US.UTF-8 kbd-chooser/method=us ",
+        "hostname={{user `vm_name`}} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "grub-installer/bootdev=/dev/sda ",
+        "net.ifnames=0 biosdevname=0 ",
+        "ipv6.disable=1 ",
+        "initrd=/install/initrd.gz -- <enter>"
+      ],
+      "shutdown_command": "echo {{user `ssh_username`}} | sudo -S /sbin/halt -h -p"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "environment_vars": "USER={{user `ssh_username`}}",
+      "execute_command": "echo {{user `ssh_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
+      "scripts": [
+        "{{template_dir}}/../scripts/base_ubuntu.sh"
+      ]
+    },    
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt-add-repository -y ppa:ansible/ansible",
+        "sudo apt-get -qy update",
+        "sudo apt-get install -qy ansible python-jmespath"
+      ]
+    },
+    {
+      "type": "shell-local",
+      "command": "sshpass -p {{user `ssh_username`}} ssh-copy-id -f -i ~/.ssh/{{user `shared_key`}} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{user `ssh_username`}}@{{user `vm_name`}}.{{user `domain`}}"
+    }
+  ]
+}
