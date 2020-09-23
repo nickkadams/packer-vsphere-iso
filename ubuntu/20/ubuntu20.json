@@ -76,7 +76,7 @@
   "provisioners": [
     {
       "type": "shell",
-      "environment_vars": "USER={{user `ssh_username`}}",
+      "environment_vars": "SSH_USERNAME={{user `ssh_username`}}",
       "execute_command": "echo {{user `ssh_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
       "scripts": [
         "{{template_dir}}/../scripts/base_ubuntu.sh"

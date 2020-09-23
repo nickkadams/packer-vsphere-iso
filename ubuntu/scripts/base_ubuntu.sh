@@ -8,9 +8,11 @@ ubuntu_version=`lsb_release -sr`
 
 DEBIAN_FRONTEND=noninteractive
 
+SSH_USERNAME="ubuntu"
+
 # Add user to sudoers and systemd-journal
-usermod -G sudo ${USER}
-usermod -a -G systemd-journal ${USER}
+usermod -G sudo $SSH_USERNAME
+usermod -a -G systemd-journal $SSH_USERNAME
 
 apt-get -qqy update
 apt-get install -qqy ansible fontconfig htop jq net-tools nvme-cli \
